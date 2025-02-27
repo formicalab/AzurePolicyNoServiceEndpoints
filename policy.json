@@ -1,0 +1,76 @@
+{
+    "mode": "All",
+    "policyRule": {
+        "if": {
+            "anyOf": [
+                {
+                    "allOf": [
+                        {
+                            "field": "type",
+                            "equals": "Microsoft.Network/virtualNetworks"
+                        },
+                        {
+                            "field": "Microsoft.Network/virtualNetworks/subnets[*].id",
+                            "equals": "[parameters('subnetId')]"
+                        },
+                        {
+                            "count": {
+                                "field": "Microsoft.Network/virtualNetworks/subnets[*].serviceEndpoints[*]",
+                                "where": {
+                                    "not": {
+                                        "field": "Microsoft.Network/virtualNetworks/subnets[*].serviceEndpoints[*].service",
+                                        "in": "[parameters('allowedServiceEndpoints')]"
+                                    }
+                                }
+                            },
+                            "greater": 0
+                        }
+                    ]
+                },
+                {
+                    "allOf": [
+                        {
+                            "field": "type",
+                            "equals": "Microsoft.Network/virtualNetworks/subnets"
+                        },
+                        {
+                            "field": "id",
+                            "equals": "[parameters('subnetId')]"
+                        },
+                        {
+                            "count": {
+                                "field": "Microsoft.Network/virtualNetworks/subnets/serviceEndpoints[*]",
+                                "where": {
+                                    "not": {
+                                        "field": "Microsoft.Network/virtualNetworks/subnets[*].serviceEndpoints[*].service",
+                                        "in": "[parameters('allowedServiceEndpoints')]"
+                                    }
+                                }
+                            },
+                            "greater": 0
+                        }
+                    ]
+                }
+            ]
+        },
+        "then": {
+            "effect": "deny"
+        }
+    },
+    "parameters": {
+        "subnetId": {
+            "type": "String",
+            "metadata": {
+                "displayName": "Subnet Resource ID",
+                "description": "The full resource ID of the subnet to block service endpoints."
+            }
+        },
+        "allowedServiceEndpoints": {
+            "type": "Array",
+            "metadata": {
+                "displayName": "Allowed Service Endpoints",
+                "description": "The list of allowed service endpoint service names."
+            }
+        }
+    }
+}
